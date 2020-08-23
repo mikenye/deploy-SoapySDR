@@ -44,6 +44,7 @@ for PKG in "${TRANS_PACKAGES[@]}"; do
     logger "package '$PKG' will be temporarily installed"
     PKGS_TO_INSTALL+=($PKG)
     PKGS_TO_REMOVE+=($PKG)
+  fi
 done
 for PKG in "${PERMA_PACKAGES[@]}"; do
   if dpkg -s "$PKG" > /dev/null 2>&1; then
@@ -51,6 +52,7 @@ for PKG in "${PERMA_PACKAGES[@]}"; do
   else
     logger "package '$PKG' will be installed"
     PKGS_TO_INSTALL+=($PKG)
+  fi
 done
 
 # Install packages
