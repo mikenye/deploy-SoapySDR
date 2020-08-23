@@ -28,7 +28,8 @@ logger "deployment started"
 
 # Do we need to run apt-get update?
 if [[ -d /var/lib/apt/lists ]]; then
-  if [[ $(ls -l /var/lib/apt/lists | wc -l) -le 1 ]]; then
+  APT_LISTS_PATH=(/var/lib/apt/lists/*)
+  if [[ "${#APT_LISTS_PATH[@]}" -le 1 ]]; then
     logger "apt-get update required"
     apt-get update
   fi
@@ -42,8 +43,8 @@ for PKG in "${TRANS_PACKAGES[@]}"; do
     logger "package '$PKG' already exists"
   else
     logger "package '$PKG' will be temporarily installed"
-    PKGS_TO_INSTALL+=($PKG)
-    PKGS_TO_REMOVE+=($PKG)
+    PKGS_TO_INSTALL+=("$PKG")
+    PKGS_TO_REMOVE+=("$PKG")
   fi
 done
 for PKG in "${PERMA_PACKAGES[@]}"; do
@@ -51,18 +52,18 @@ for PKG in "${PERMA_PACKAGES[@]}"; do
     logger "package '$PKG' already exists"
   else
     logger "package '$PKG' will be installed"
-    PKGS_TO_INSTALL+=($PKG)
+    PKGS_TO_INSTALL+=("$PKG")
   fi
 done
 
 # Install packages
 logger "installing packages"
-apt-get install --no-install-recommends -y ${PKGS_TO_INSTALL[@]}
+apt-get install --no-install-recommends -y "${PKGS_TO_INSTALL[@]}"
 
 # Clone SoapySDR repo
 logger "cloning SoapySDR repo"
 git clone https://github.com/pothosware/SoapySDR.git /src/SoapySDR
-pushd /src/SoapySDR
+pushd /src/SoapySDR || exit 1
 
 # If BRANCH_SOAPYSDR is not already set, use the latest branch
 if [[ -z "$BRANCH_SOAPYSDR" ]]; then
@@ -80,12 +81,13 @@ echo "SoapySDR ${BRANCH_SOAPYSDR}" >> /VERSIONS
 # Build
 logger "building SoapySDR"
 mkdir -p /src/SoapySDR/build
-pushd /src/SoapySDR/build
+pushd /src/SoapySDR/build || exit 1
 cmake -Wno-dev ..
 make all
 make install
 ldconfig
-popd && popd
+popd || exit 1
+popd || exit 1
 
 # Test
 logger "Testing SoapySDRUtil"
@@ -98,7 +100,7 @@ fi
 
 # Clean up
 logger "Cleaning up"
-apt-get remove -y ${PKGS_TO_REMOVE[@]}
+apt-get remove -y "${PKGS_TO_REMOVE[@]}"
 apt-get autoremove -y
 rm -rf /src/SoapySDR
 
