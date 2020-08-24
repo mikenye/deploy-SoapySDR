@@ -10,10 +10,14 @@ TRANS_PACKAGES+=('build-essential')
 TRANS_PACKAGES+=('ca-certificates')
 TRANS_PACKAGES+=('cmake')
 TRANS_PACKAGES+=('git')
+TRANS_PACKAGES+=('libpython3-dev')
+TRANS_PACKAGES+=('python3')
 
 # Define permanent packages, required for operation
 PERMA_PACKAGES=()
-
+PERMA_PACKAGES+=('swig')
+PERMA_PACKAGES+=('python3-numpy')
+PERMA_PACKAGES+=('python3-distutils')
 
 # Define loggiing fuction
 LIGHTBLUE='\033[1;34m'
@@ -100,6 +104,12 @@ ldconfig
 popd || exit 1
 popd || exit 1
 
+# Clean up
+logger "Cleaning up"
+apt-get remove -y "${PKGS_TO_REMOVE[@]}"
+apt-get autoremove -y
+rm -rf /src/SoapySDR
+
 # Test
 logger "Testing SoapySDRUtil"
 if SoapySDRUtil --info > /dev/null 2>&1; then
@@ -109,10 +119,5 @@ else
     exit 1
 fi
 
-# Clean up
-logger "Cleaning up"
-apt-get remove -y "${PKGS_TO_REMOVE[@]}"
-apt-get autoremove -y
-rm -rf /src/SoapySDR
-
+# Finished
 logger "Finished"
